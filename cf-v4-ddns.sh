@@ -22,6 +22,7 @@ set -o pipefail
 
 # Optional flags:
 #            -f false|true \           # force dns update, disregard local stored ip
+#            -s false|true \           # silence the 'WAN IP Unchanged' message
 
 # default config
 
@@ -44,17 +45,21 @@ CFTTL=120
 # Ignore local file, update ip anyway
 FORCE=false
 
+# Print exit message if no ip changes in needed
+SILENT=false
+
 # Site to retrieve WAN ip, other examples are: bot.whatismyipaddress.com, https://api.ipify.org/ ...
 WANIPSITE="http://icanhazip.com"
 
 # get parameter
-while getopts k:u:h:z:f: opts; do
+while getopts k:u:h:z:f:s: opts; do
   case ${opts} in
     k) CFKEY=${OPTARG} ;;
     u) CFUSER=${OPTARG} ;;
     h) CFRECORD_NAME=${OPTARG} ;;
     z) CFZONE_NAME=${OPTARG} ;;
     f) FORCE=${OPTARG} ;;
+    s) SILENT=${OPTARG} ;;
   esac
 done
 
@@ -93,6 +98,10 @@ fi
 
 # If WAN IP is unchanged an not -f flag, exit here
 if [ "$WAN_IP" = "$OLD_WAN_IP" ] && [ "$FORCE" = false ]; then
+
+  if "$SILENT" == true; then
+    exit 0
+  fi
   echo "WAN IP Unchanged, to update anyway use flag -f true"
   exit 0
 fi
